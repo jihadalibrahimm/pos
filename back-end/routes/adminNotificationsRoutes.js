@@ -4,6 +4,7 @@ import {
   getAdminNotifications,
   markAdminNotificationSeen,
   createAdminNotification,
+  deleteAdminNotification
 } from '../controllers/adminNotificationsController.js'
 
 import {protectAdmin, authorizeAdmin} from '../middlewares/adminAuth.js'
@@ -14,5 +15,5 @@ router.use(protectAdmin, authorizeAdmin("admin", "super-admin"))
 router.get('/', getAdminNotifications)
 router.post('/', createAdminNotification)
 router.put('/:id', markAdminNotificationSeen)
-
+router.delete("/:id", deleteAdminNotification)
 export default router

@@ -17,7 +17,7 @@ function Products() {
 
     },[])
     return (
-        <div className="pt-32 min-h-screen p-10 bg-linear-to-b from-[#faf6ef] to-[#f0e5d2] ">
+        <div className="pt-32 min-h-screen p-10 bg-transparent  ">
             <motion.h1 initial={{opacity:0, y:-20}} animate={{opacity:1, y:0}}
             className='text-4xl font-bold text-neutral-900 mb-10 flex items-center gap-3'>
                 <Package size={36} className='text-[#C9A86A]'/>

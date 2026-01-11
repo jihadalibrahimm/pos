@@ -16,6 +16,7 @@ export const protectAdmin = async (req, res, next) => {
     req.admin = admin
     next()
   } catch (err) {
+    console.error("Protect Admin Error:", err)
     return res.status(401).json({ message: "Invalid admin token" })
   }
 }

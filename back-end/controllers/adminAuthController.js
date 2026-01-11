@@ -1,13 +1,18 @@
-import Admin from '../models/Admin.js'
+import Admin from "../models/Admin.js"
 import bcrypt from "bcryptjs"
-import { sendAdminToken } from '../utilities/generateAdminToken.js'
+import { sendAdminToken } from "../utilities/generateAdminToken.js"
 
 export const adminRegister = async (req, res) => {
   try {
     const { name, email, password, role } = req.body
 
-    if (await Admin.findOne({ email })) {
-      return res.status(400).json({ message: "Email exists" })
+    if (!name || !email || !password || !role) {
+      return res.status(400).json({ message: "All fields are required" })
+    }
+
+    const exists = await Admin.findOne({ email })
+    if (exists) {
+      return res.status(400).json({ message: "Email already exists" })
     }
 
     const hashedPassword = await bcrypt.hash(password, 10)
@@ -16,29 +21,23 @@ export const adminRegister = async (req, res) => {
       name,
       email,
       password: hashedPassword,
-      role
+      role,
     })
 
-    sendAdminToken(admin, res)
-
-    res.status(201).json({
-      message: "Admin Created",
-      admin: {
-        id: admin._id,
-        name: admin.name,
-        email: admin.email,
-        role: admin.role
-      }
-    })
-
+    return sendAdminToken(admin, res)
   } catch (err) {
-    res.status(500).json({ message: err.message })
+    console.error("ADMIN REGISTER ERROR:", err)
+    res.status(500).json({ message: "Server error" })
   }
 }
 
 export const adminLogin = async (req, res) => {
   try {
     const { email, password } = req.body
+
+    if (!email || !password) {
+      return res.status(400).json({ message: "Email and password required" })
+    }
 
     const admin = await Admin.findOne({ email })
     if (!admin) {
@@ -50,14 +49,20 @@ export const adminLogin = async (req, res) => {
       return res.status(400).json({ message: "Invalid credentials" })
     }
 
-    return sendAdminToken(admin, res) // 👈 return مهم
+    return sendAdminToken(admin, res)
   } catch (err) {
-    res.status(500).json({ message: err.message })
+    console.error("ADMIN LOGIN ERROR:", err)
+    res.status(500).json({ message: "Server error" })
   }
 }
 
 export const adminLogout = (req, res) => {
-  res.clearCookie("admin_token")
+  res.clearCookie("admin_token", {
+    httpOnly: true,
+    sameSite: "lax",
+    path: "/",
+  })
+
   res.json({ message: "Logged out" })
 }
 

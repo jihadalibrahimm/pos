@@ -5,7 +5,8 @@ const transactionSchema = new mongoose.Schema({
     amount:{type:Number, required:true},
     userId:{type:mongoose.Schema.Types.ObjectId , ref:"User"},
     status:{type:String, enum:["pending", "completed", "failed"], default:"pending"},
-    paymentMethod:{type:String , enum:["cash", "visa"], default:"cash"},
+    paymentMethod:{type:String , enum:["cash", "card", "online"], default:"cash"}
+
          
 }, {timestamps:true})
 

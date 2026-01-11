@@ -18,7 +18,6 @@ import invoiceRoutes from './routes/invoiceRoutes.js'
 import customerRoutes from './routes/customerRoutes.js'
 import adminUsersRoutes from './routes/adminUsersRoutes.js'
 import adminTransactionsRoutes from './routes/adminTransactionsRoutes.js'
-
 dotenv.config()
 
 const app = express()
@@ -48,6 +47,7 @@ app.use("/api/customers",customerRoutes)
 app.use("/api/reports",reportsRoutes)
 app.use("/api/notifications",notificationsRoutes)
 app.use("/api/settings",settingsRoutes)
+app.use("/uploads", express.static("uploads"));
 
 app.use((req,res) => res.status(404).json({message:"Route Not Found"}))
 

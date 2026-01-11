@@ -1,10 +1,9 @@
-import mongoose from 'mongoose'
+import mongoose from 'mongoose';
 
 const notificationsSchema = new mongoose.Schema({
-    message:String,
-    cashier:{type:String , enum:['low_stock', 'invoices', 'info']},
-    senn:{type:Boolean, default:false},
+  message: { type: String, required: true },
+  cashier: { type: String, enum: ['low_stock', 'invoices', 'info'], required: true },
+  seen: { type: Boolean, default: false },
+}, { timestamps: true });
 
-}, {timestamps:true})
-
-export default mongoose.model("Notifications", notificationsSchema)
+export default mongoose.model("Notifications", notificationsSchema);

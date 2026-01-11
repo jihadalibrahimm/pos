@@ -1,1 +1,20 @@
 @import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
+
+
+@layer base {
+  :root {
+    --bg: 248 246 241;
+    --text: 24 24 27;
+  }
+
+  .dark {
+    --bg: 23 23 23;
+    --text: 245 245 245;
+  }
+
+  body {
+    background-color: rgb(var(--bg));
+    color: rgb(var(--text));
+  }
+}

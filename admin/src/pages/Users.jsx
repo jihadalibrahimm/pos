@@ -1,194 +1,170 @@
-import React, {useState, useEffect } from "react"
+import { useEffect, useState } from "react"
 import API from "../api/axios"
-import { AnimatePresence, motion } from "framer-motion"
-import { 
-    FiUser,
-    FiPlus,
-    FiMail,
-    FiShield,
-} from "react-icons/fi"
-import {FaEdit, FaTrash} from "react-icons/fa"
+import { motion, AnimatePresence } from "framer-motion"
+import { FaTrash, FaUserShield, FaCashRegister } from "react-icons/fa"
+import { toast } from "react-toastify"
 
 function Users() {
-    const [users, setUsers] = useState([])
-    const [openModal, setOpenModal] = useState(false)
-    const [isEdit, setIsEdit] = useState(false)
-    const [currentUser, setCurrentUser] = useState({
-        _id:null,
-        name:"",
-        email:"",
-        role:"user",
-        password:"",
-    })
+  const [users, setUsers] = useState([])
+  const [search, setSearch] = useState("")
+  const [roleFilter, setRoleFilter] = useState("all")
+  const [loading, setLoading] = useState(true)
 
-    const fetchUsers = async() => {
-        try {
-            const res = await API.get('/admin/users')
-            setCurrentUser(res.data)
-        } catch(err) {
-            console.log(err)
-        }
+  useEffect(() => {
+    fetchUsers()
+  }, [])
+
+  const fetchUsers = async () => {
+    try {
+      setLoading(true)
+      const res = await API.get("/admin/users")
+      setUsers(res.data)
+    } catch {
+      toast.error("Failed to load users")
+    } finally {
+      setLoading(false)
     }
+  }
 
-    useEffect(() => {
-        fetchUsers()
-    },[])
-
-    const handleOpenModal = (user = null) => {
-        if(user){
-            setIsEdit(true)
-            setCurrentUser({
-                _id:user._id,
-                name:user.name,
-                email:user.email,
-                role:user.role,
-                password:"",
-            })
-        }else{
-            setIsEdit(false)
-            setCurrentUser({
-                _id:null,
-                name:"",
-                email:"",
-                role:"user",
-                password:"",
-            })
-        }
-        setOpenModal(true)
+  const changeRole = async (id, role) => {
+    try {
+      const res = await API.put(`/admin/users/${id}`, { role })
+      setUsers(users.map(u => (u._id === id ? res.data : u)))
+      toast.success("Role updated")
+    } catch {
+      toast.error("Failed to update role")
     }
+  }
 
-    const handleSaveUser = async() => {
-        try {
-            if(isEdit){
-                await API.put(`/admin/users/${currentUser._id}`, currentUser)
-            }else{
-                await API.post('/admin/users', currentUser)
-            }
-            fetchUsers()
-            setOpenModal(false)
-        } catch(err) {
-            console.log(err)
-        }
+  const deleteUser = async (id) => {
+    if (!confirm("Delete this user?")) return
+    try {
+      await API.delete(`/admin/users/${id}`)
+      setUsers(users.filter(u => u._id !== id))
+      toast.success("User deleted")
+    } catch {
+      toast.error("Delete failed")
     }
+  }
 
-    const handleDeleteUser = async(id) => {
-    if(!id) return;
+  const filteredUsers = users.filter(u => {
+    const matchSearch =
+      u.name.toLowerCase().includes(search.toLowerCase()) ||
+      u.email.toLowerCase().includes(search.toLowerCase())
 
-    try{     
-        await API.delete(`/admin/users/${id}`)
-        fetchUsers()
-    } catch(err) {
-        console.log(err)
-    }
-    
-    return (
-        <div className="p-6 bg-linear-to-b from-[#faf6ef] to-[#e8ddc9] pt-32 h-screen mx-auto">
-            
-            <motion.h2 initial={{opacity:0, y:-12}} animate={{opacity:1, y:0}} 
-            className="text-3xl font-bold mb-6 flex items-center gap-2" >
-                <FiUser/> User
+    const matchRole = roleFilter === "all" || u.role === roleFilter
+    return matchSearch && matchRole
+  })
 
-            </motion.h2>
+  if (loading) {
+    return <div className="p-10 text-xl">Loading...</div>
+  }
 
-            <button onClick={() => handleOpenModal()}
-            className="mb-6 px-5 bg-blue-600 text-white rounded-xl flex items-center gap-2
-            hover:bg-blue-700 transition active:scale-95 shadow-md">
-                <FiPlus/> Add User
-            </button>
+  return (
+    <div className="p-6 pt-24 min-h-screen bg-gradient-to-b from-[#faf6ef] to-[#e8ddc9]">
+      <h1 className="text-3xl font-bold text-indigo-700 mb-6">
+        Users Management
+      </h1>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                {users.map((user, index) => {
+      {/* Filters */}
+      <div className="grid md:grid-cols-2 gap-4 mb-6">
+        <input
+          placeholder="Search name or email..."
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          className="p-3 rounded-xl border bg-white"
+        />
 
-                    <motion.div key={user._id} initial={{opacity:0, y:15}} animate={{opacity:1, y:0}} 
-                    transition={{delay:index* 0.06}} className="bg-white border-gray-200 rounded-xl
-                    p-5 shadow-sm hover:shadow-lg transition" >
-                        
-                        <h3 className="text-xl font-semibold">
-                            {user.name}
-                        </h3>
+        <select
+          value={roleFilter}
+          onChange={e => setRoleFilter(e.target.value)}
+          className="p-3 rounded-xl border bg-white cursor-pointer"
+        >
+          <option value="all">All Roles</option>
+          <option value="admin">Admin</option>
+          <option value="cashier">Cashier</option>
+        </select>
+      </div>
 
-                        <p className="text-gray-500 mt-1 items-center gap-2 text-sm">
-                            <FiMail className="text-gray-400"/> {user.email}
-                        </p>
-                        
-                        <p className="text-gray-500 mt-1 items-center gap-2 text-sm">
-                            <FiShield className="text-gray-400"/> {user.role}
-                        </p>
+      {/* Table */}
+      <div className="bg-white rounded-2xl shadow-xl overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead className="bg-indigo-100">
+            <tr>
+              <th className="p-4 text-left">Name</th>
+              <th className="p-4 text-left">Email</th>
+              <th className="p-4 text-left">Role</th>
+              <th className="p-4 text-left">Actions</th>
+            </tr>
+          </thead>
 
-                        <div className="flex justify-end gap-3 mt-4">
-                            
-                            <button onClick={() => handleOpenModal(user)} className="p-2 
-                            rounded-lg bg-yellow-100 hover:bg-yellow-200 transition">
-                                <FaEdit className="text-yellow-700"/>
-                            </button>
-
-                            <button onClick={() => handleDeleteUser(user)} className="p-2 
-                            rounded-lg bg-red-100 hover:bg-red-200 transition">
-                                <FaTrash className="text-yellow-700"/>
-                            </button>
-                        </div>
-                    </motion.div>
-                })}
-            </div>
-            {users.length ===0 &&(
-                <motion.p initial={{opacity:0}} animate={{opacity:1}} 
-                className="text-gray-400 text-center mt-10">
-                    No Users avalible
-                </motion.p>
-            )}
-
+          <tbody>
             <AnimatePresence>
-                {openModal &&(
-                    <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} 
-                    className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-100">
-                           
-                        <motion.div initial={{scale:0.05, opacity:0}} animate={{scale:1, opacity:1}} exit={{scale:0.85,opacity:0}} 
-                            className="bg-white rounded-2xl p-6 w-full max-w-lg shadow-xl">
-                                
-                                <h2 className="text-xl font-semibold mb-4">
-                                    {isEdit ? "Edit User" : "Add User"}
-                                </h2>
+              {filteredUsers.map(user => (
+                <motion.tr
+                  key={user._id}
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="border-b hover:bg-indigo-50 transition"
+                >
+                  <td className="p-4 font-medium">{user.name}</td>
+                  <td className="p-4 text-gray-600">{user.email}</td>
 
-                                <div className="space-x-4">
-                                    <input type="text" placeholder="Name" value={currentUser.name}
-                                    onChange={(e) => setCurrentUser({...currentUser, name: e.target.value})}
-                                    className="w-full p-3 border rounded-lg" />
+                  {/* Role Tags */}
+                  <td className="p-4">
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => changeRole(user._id, "admin")}
+                        className={`px-4 py-1 rounded-full text-xs flex items-center gap-1 transition font-semibold
+                          ${
+                            user.role === "admin"
+                              ? "bg-indigo-600 text-white shadow"
+                              : "bg-indigo-100 text-indigo-700 hover:bg-indigo-200"
+                          }`}
+                      >
+                        <FaUserShield /> Admin
+                      </button>
 
-                                    <input type="email" placeholder="Email" value={currentUser.email}
-                                    onChange={(e) => setCurrentUser({...currentUser, email: e.target.value})}
-                                    className="w-full p-3 border rounded-lg" />
+                      <button
+                        onClick={() => changeRole(user._id, "cashier")}
+                        className={`px-4 py-1 rounded-full text-xs flex items-center gap-1 transition font-semibold
+                          ${
+                            user.role === "cashier"
+                              ? "bg-green-600 text-white shadow"
+                              : "bg-green-100 text-green-700 hover:bg-green-200"
+                          }`}
+                      >
+                        <FaCashRegister /> Cashier
+                      </button>
+                    </div>
+                  </td>
 
-                                    <input type="text" placeholder="Role (admin / user )" value={currentUser.role}
-                                    onChange={(e) => setCurrentUser({...currentUser, role: e.target.value})}
-                                    className="w-full p-3 border rounded-lg" />
-
-                                    <input type="password" placeholder="Password" value={currentUser.password}
-                                    onChange={(e) => setCurrentUser({...currentUser, password: e.target.value})}
-                                    className="w-full p-3 border rounded-lg" />
-
-                                </div>
-
-                                <div className="flex justify-end gap-3 mt-5">
-                                    
-                                    <button onClick={() => setOpenModal(false)}
-                                    className="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300 transition">
-                                        Cancel
-                                    </button>
-
-                                    <button onClick={handleSaveUser}
-                                    className="px-4 py-2 bg-blue-600 rounded-lg hover:bg-blue-700 transition">
-                                        { isEdit ? "Update" : "Add"}
-                                    </button>
-
-                                </div>
-
-                        </motion.div>
-                    </motion.div>
-                )}
+                  {/* Actions */}
+                  <td className="p-4">
+                    <button
+                      onClick={() => deleteUser(user._id)}
+                      className="p-2 rounded-lg bg-red-100 hover:bg-red-200 transition"
+                    >
+                      <FaTrash className="text-red-600" />
+                    </button>
+                  </td>
+                </motion.tr>
+              ))}
             </AnimatePresence>
-
-        </div>
-    )
+            {filteredUsers.length === 0 && (
+              <tr>
+                <td colSpan="4" className="text-center p-6 text-gray-500">
+                  No users found
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  )
 }
 
 export default Users

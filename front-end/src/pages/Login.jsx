@@ -20,7 +20,7 @@ function Login() {
         await login(email, password)
         toast.success("Logged Successfully")
         setTimeout(() => {
-            navigate('/')
+            navigate('/home')
         }, 500);
     } catch(err) {
         setError(err.response?.data?.message || err.message ||"Login failed");

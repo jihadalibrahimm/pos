@@ -17,27 +17,34 @@ function CreateProduct() {
 
     const nav = useNavigate()
 
-    const submit = async(e) => {
-        e.preventDefault()
-        setError("")
-        setLoading(true)
+    const submit = async (e) => {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
 
-        try {
-            await API.post('/products',{
-                name,
-                category,
-                purchasePrice: parseFloat(purchasePrice),
-                sellingPrice: parseFloat(sellingPrice),
-                stock: parseInt(stock),
-                minStock: parseInt(minStock) || 5,
-            })
-            setLoading(false)
-            nav('/products')
-        } catch (err) {
-            setError(err.response?.data?.message || " Somthing went wrong! ")
-            setLoading(true)
-        }
+    try {
+        const formData = new FormData();
+        formData.append("name", name);
+        formData.append("category", category);
+        formData.append("purchasePrice", purchasePrice);
+        formData.append("sellingPrice", sellingPrice);
+        formData.append("stock", stock);
+        formData.append("minStock", minStock);
+        if (imageFile) formData.append("image", imageFile); // imageFile متغير جديد
+
+        await API.post("/products", formData, {
+            headers: {
+                "Content-Type": "multipart/form-data"
+            }
+        });
+
+        setLoading(false);
+        nav("/products");
+    } catch (err) {
+        setError(err.response?.data?.message || "Something went wrong!");
+        setLoading(false);
     }
+};
 
     return (
         <div className="min-h-screen pt-28 p-10 bg-linear-to-b from-[#f8f6f1] to-[#f0e5d2]

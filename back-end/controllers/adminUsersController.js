@@ -1,41 +1,95 @@
-import Admin from "../models/Admin.js";
+import User from "../models/User.js"
 import bcrypt from "bcryptjs"
+import mongoose from "mongoose"
 
-export const getAllAdmins = async(req,res) => {
-    const admins = await Admin.find().select("-password")
-    res.json(admins)
+// GET all users
+export const getUsers = async (req, res) => {
+  try {
+    const users = await User.find().select("-password").sort({ createdAt: -1 })
+    res.json(users)
+  } catch (err) {
+    res.status(500).json({ message: "Server error" })
+  }
 }
 
-export const getAdminById = async(req,res) => {
-    const admin = await Admin.findById(req.params.id).select("-password")
-    res.json(admin)
-}
+// CREATE user (password auto)
+export const createUser = async (req, res) => {
+  try {
+    const { name, email, role } = req.body
 
-export const updateAdmin = async(req,res) => {
-    const data = {...req.body}
-    if(data.password){
-        data.password = await bcrypt.hash(data.password,10)
+    if (!name || !email || !role) {
+      return res.status(400).json({ message: "All fields are required" })
     }
-    const updated = await Admin.findByIdAndUpdate(req.params.id,data,{new:true}).select("-password")
+
+    const exists = await User.findOne({ email })
+    if (exists) {
+      return res.status(400).json({ message: "Email already exists" })
+    }
+
+    const tempPassword = "123456"
+    const hashedPassword = await bcrypt.hash(tempPassword, 10)
+
+    const user = await User.create({
+      name,
+      email,
+      role,
+      password: hashedPassword,
+    })
+
+    res.status(201).json({
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+    })
+  } catch (err) {
+    res.status(500).json({ message: "Server error" })
+  }
+}
+
+// UPDATE user (role only)
+export const updateUser = async (req, res) => {
+  try {
+    const { id } = req.params
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "Invalid ID" })
+    }
+
+    const { name, email, role } = req.body
+
+    const updated = await User.findByIdAndUpdate(
+      id,
+      { name, email, role },
+      { new: true }
+    ).select("-password")
+
+    if (!updated) {
+      return res.status(404).json({ message: "User not found" })
+    }
+
     res.json(updated)
+  } catch (err) {
+    res.status(500).json({ message: "Server error" })
+  }
 }
 
-export const deleteAdmin = async(req,res) => {
-    await Admin.findByIdAndDelete(req.params.id)
-    res.json({message:"Admin deleted"})
-}
+// DELETE user
+export const deleteUser = async (req, res) => {
+  try {
+    const { id } = req.params
 
-export const createAdmin = async(req,res) => {
-    try {
-        const {name, email, password, role} = req.body
-        if(!name || !email || !password || !role ){
-            return res.status(400).json({message:"ALl fields are required"})
-        }
-        const hashedPassword = await bcrypt.hash(password,10)
-        const admin = await Admin.create({name, email, password:hashedPassword ,role})
-        res.status(201).json({...admin.toObject(), password:undefined})
-
-    } catch (err) {
-        res.status(500).json({message:err.message})
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "Invalid ID" })
     }
+
+    const deleted = await User.findByIdAndDelete(id)
+    if (!deleted) {
+      return res.status(404).json({ message: "User not found" })
+    }
+
+    res.json({ message: "User deleted" })
+  } catch (err) {
+    res.status(500).json({ message: "Server error" })
+  }
 }

@@ -1,53 +1,160 @@
-import Transaction from "../models/Transaction.js";
-import Project from "../models/Project.js";
+import Transaction from "../models/Transaction.js"
+import Project from "../models/Project.js"
+import User from "../models/User.js"
+import mongoose from "mongoose"
 
 export const createTransaction = async (req, res) => {
   try {
-    const { projectId, amount, userId, paymentMethod } = req.body
+    const { projectId, userId, amount, paymentMethod } = req.body
+
+    if (!projectId || !userId || !amount) {
+      return res.status(400).json({ message: "Missing required fields" })
+    }
+
+    if (
+      !mongoose.Types.ObjectId.isValid(projectId) ||
+      !mongoose.Types.ObjectId.isValid(userId)
+    ) {
+      return res.status(400).json({ message: "Invalid IDs" })
+    }
+
+    const numericAmount = Number(amount)
+    if (isNaN(numericAmount)) {
+      return res.status(400).json({ message: "Invalid amount" })
+    }
 
     const project = await Project.findById(projectId)
     if (!project) {
       return res.status(404).json({ message: "Project not found" })
     }
 
+    const user = await User.findById(userId)
+    if (!user) {
+      return res.status(404).json({ message: "User not found" })
+    }
+
     const transaction = await Transaction.create({
       projectId,
-      amount,
       userId,
+      amount: numericAmount,
       paymentMethod,
-      status: "completed"
+      status: "completed",
     })
 
-    project.collectedAmount = (project.collectedAmount || 0) + amount
-    await project.save()
+    // ✅ تحديث آمن بدون كسر validation
+    await Project.findByIdAndUpdate(
+      projectId,
+      { $inc: { collectAmount: numericAmount } }
+    )
 
-    res.json(transaction)
+    const populatedTransaction = await Transaction.findById(transaction._id)
+      .populate("projectId", "name")
+      .populate("userId", "name email")
 
+    res.status(201).json(populatedTransaction)
   } catch (err) {
-    res.status(500).json({ message: err.message })
+    console.error("CREATE TRANSACTION ERROR:", err)
+    res.status(500).json({ message: "Server error" })
   }
 }
 
-export const getAllTransactions = async(req,res) => {
+/* ================= GET ALL ================= */
+export const getAllTransactions = async (req, res) => {
+  try {
     const transactions = await Transaction.find()
-    .populate("projectId","name")
-    .populate("userId", "name email")
+      .populate("projectId", "name")
+      .populate("userId", "name email")
+
     res.json(transactions)
+  } catch (err) {
+    console.error("GET ALL TRANSACTIONS ERROR:", err)
+    res.status(500).json({ message: "Server error" })
+  }
 }
 
-export const getTransactionById = async(req,res) => {
-    const transaction = await Transaction.findById(req.params.id)
-    .populate("projectId","name")
-    .populate("userId", "name email")
+/* ================= GET BY ID ================= */
+export const getTransactionById = async (req, res) => {
+  try {
+    const { id } = req.params
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "Invalid ID" })
+    }
+
+    const transaction = await Transaction.findById(id)
+      .populate("projectId", "name")
+      .populate("userId", "name email")
+
+    if (!transaction) {
+      return res.status(404).json({ message: "Transaction not found" })
+    }
+
     res.json(transaction)
+  } catch (err) {
+    console.error("GET TRANSACTION ERROR:", err)
+    res.status(500).json({ message: "Server error" })
+  }
 }
 
-export const updateTransaction = async(req,res) => {
-    const update = await Transaction.findByIdAndUpdate(req.params.id, req.body, {new:true})
-    res.json(update)
+/* ================= UPDATE ================= */
+export const updateTransaction = async (req, res) => {
+  try {
+    const { id } = req.params
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "Invalid ID" })
+    }
+
+    const updateData = { ...req.body }
+
+    if (updateData.amount !== undefined) {
+      const numericAmount = Number(updateData.amount)
+      if (isNaN(numericAmount)) {
+        return res.status(400).json({ message: "Invalid amount" })
+      }
+      updateData.amount = numericAmount
+    }
+
+    // تأكد من وجود المشروع واليوزر لو تم تغييرهم
+    if (updateData.projectId && !mongoose.Types.ObjectId.isValid(updateData.projectId)) {
+      return res.status(400).json({ message: "Invalid projectId" })
+    }
+    if (updateData.userId && !mongoose.Types.ObjectId.isValid(updateData.userId)) {
+      return res.status(400).json({ message: "Invalid userId" })
+    }
+
+    const updated = await Transaction.findByIdAndUpdate(id, updateData, { new: true })
+      .populate("projectId", "name")
+      .populate("userId", "name email")
+
+    if (!updated) {
+      return res.status(404).json({ message: "Transaction not found" })
+    }
+
+    res.json(updated)
+  } catch (err) {
+    console.error("UPDATE TRANSACTION ERROR:", err)
+    res.status(500).json({ message: "Server error" })
+  }
 }
 
-export const deleteTransaction = async(req,res) => {
-    await Transaction.findByIdAndDelete(req.params.id)
-    res.json({message:"Transaction deleted"})
+/* ================= DELETE ================= */
+export const deleteTransaction = async (req, res) => {
+  try {
+    const { id } = req.params
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "Invalid ID" })
+    }
+
+    const deleted = await Transaction.findByIdAndDelete(id)
+    if (!deleted) {
+      return res.status(404).json({ message: "Transaction not found" })
+    }
+
+    res.json({ message: "Transaction deleted" })
+  } catch (err) {
+    console.error("DELETE TRANSACTION ERROR:", err)
+    res.status(500).json({ message: "Server error" })
+  }
 }

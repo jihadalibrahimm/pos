@@ -1,16 +1,14 @@
-import express from 'express'
-
+import express from "express";
 import {
-    createInvoice,
-    getInvoices,
-    getInvoiceById,
-} from '../controllers/invoiceController.js'
-import {protect,authorize} from '../middlewares/auth.js'
+  getInvoices,
+  createInvoice,
+  deleteInvoice
+} from "../controllers/invoiceController.js";
 
-const router = express.Router()
+const router = express.Router();
 
-router.get('/' , protect , getInvoices)
-router.get('/:id' , protect , getInvoiceById)
-router.post('/' , protect , authorize('cashier', "manager", 'admin'), createInvoice)
+router.get("/", getInvoices);
+router.post("/", createInvoice);   
+router.delete("/:id", deleteInvoice);
 
-export default router
+export default router;

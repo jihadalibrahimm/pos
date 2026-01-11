@@ -21,11 +21,13 @@ function Sales() {
   const [tax, setTax] = useState(5)
   const [discount, setDiscount] = useState(0)
 
+  // تحميل المنتجات
   const loadProducts = async () => {
     try {
       const { data } = await API.get("/products")
       setProducts(data || [])
-    } catch {
+    } catch (err) {
+      console.error(err)
       setProducts([])
     }
   }
@@ -34,50 +36,76 @@ function Sales() {
     loadProducts()
   }, [])
 
-  const addToCart = (product) => {
-    setCart(prev => {
-      const exist = prev.find(p => p._id === product._id)
-      if (exist) {
-        return prev.map(p =>
-          p._id === product._id
-            ? { ...p, quantity: p.quantity + 1 }
-            : p
-        )
-      }
-      return [...prev, { ...product, quantity: 1 }]
-    })
-  }
+const addToCart = (product) => {
+  setCart(prev => {
+    const exist = prev.find(p => p._id === product._id)
 
-  const total = cart.reduce(
+    if (exist) {
+      if (exist.quantity >= product.stock) {
+        alert("No more stock available")
+        return prev
+      }
+
+      return prev.map(p =>
+        p._id === product._id
+          ? { ...p, quantity: p.quantity + 1 }
+          : p
+      )
+    }
+
+    if (product.stock < 1) {
+      alert("Out of stock")
+      return prev
+    }
+
+    return [...prev, { ...product, quantity: 1 }]
+  })
+}
+
+  const subTotal = cart.reduce(
     (acc, item) => acc + item.sellingPrice * item.quantity,
     0
   )
 
-  const finalTotal = total + (total * tax) / 100 - discount
+  const finalTotal =
+    subTotal - discount + (subTotal * tax) / 100
 
+  // Checkout
   const checkout = async () => {
-    await API.post("/invoices", {
-      items: cart,
-      tax,
-      discount,
-      total: finalTotal,
-    })
-    setCart([])
-    setDiscount(0)
+    try {
+      const items = cart.map(item => ({
+        productId: item._id,
+        qty: item.quantity,
+      }))
+
+      await API.post("/invoices", {
+        items,
+        tax,
+        discount,
+        paymentMethod: "cash",
+      })
+
+      setCart([])
+      setDiscount(0)
+    } catch (err) {
+      console.error(err)
+      alert(err.response?.data?.message || "Checkout failed")
+    }
   }
 
   return (
     <Box sx={{ p: 4, bgcolor: "#f5f6fa", minHeight: "100vh" }}>
-      
       <Typography variant="h4" fontWeight="bold" gutterBottom>
         Sales
       </Typography>
 
-      <Box sx={{display: "grid",gridTemplateColumns: {
-      xs: "1fr",        // موبايل: عمود واحد
-      md: "2.2fr 1fr",  // شاشة كبيرة: عمودين
-      },gap: 3,}}>
-
+      <Box
+        sx={{
+          display: "grid",
+          gridTemplateColumns: { xs: "1fr", md: "2.2fr 1fr" },
+          gap: 3,
+        }}
+      >
         {/* PRODUCTS */}
         <Paper sx={{ p: 3, borderRadius: 3 }}>
           <Typography variant="h6" gutterBottom>
@@ -134,7 +162,6 @@ function Sales() {
                   sx={{
                     display: "flex",
                     justifyContent: "space-between",
-                    alignItems: "center",
                   }}
                 >
                   <Typography>

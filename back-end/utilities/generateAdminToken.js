@@ -11,6 +11,7 @@ export const sendAdminToken = (admin, res) => {
     httpOnly: true,
     secure: false,        // مهم محلياً
     sameSite: "lax",
+    path: "/",              // 🔥🔥🔥 هذا السطر مهم جدًا
     maxAge: 7 * 24 * 60 * 60 * 1000,
   })
 

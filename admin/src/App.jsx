@@ -3,21 +3,21 @@ import Header from "./components/Header"
 import { AdminAuthProvider } from "./context/AdminAuthContext"
 import Login from './pages/AdminLogin'
 import Register from './pages/AdminRegister'
-import Home from './pages/Home'
 import Products from './pages/Products'
 import Customers from './pages/Customer'
 import Invoices from './pages/Invoices'
 import CreateProduct from './pages/CreateProduct'
 import Notifications from './pages/Notifications'
-import Profile from './pages/Profile'
 import Reports from './pages/Reports'
-import Settings from './pages/Settings'
-import EditProduct from './pages/EditProduct'
 import ProtectedRoute from './components/ProtectedRoutes'
+import Dashboard from './pages/Dashboard'
 
 import { ToastContainer } from "react-toastify"
 import "react-toastify/dist/ReactToastify.css"
 import './index.css'
+import Transactions from "./pages/Transactions"
+import Sales from "./pages/Sales"
+import Users from "./pages/Users"
 
 function App(){
   return (
@@ -31,7 +31,13 @@ function App(){
           
           <Route path="/dashboard" element={
             <ProtectedRoute>
-              <Home/>
+              <Dashboard/>
+            </ProtectedRoute>
+          }/>
+
+           <Route path="/users" element={
+            <ProtectedRoute>
+              <Users/>
             </ProtectedRoute>
           }/>
 
@@ -47,6 +53,12 @@ function App(){
             </ProtectedRoute>
           }/>
 
+          <Route path="/sales" element={
+            <ProtectedRoute>
+              <Sales/>
+            </ProtectedRoute>
+          }/>
+
           <Route path="/customers" element={
             <ProtectedRoute>
               <Customers/>
@@ -59,15 +71,15 @@ function App(){
             </ProtectedRoute>
           }/>
 
-          <Route path="/notifications" element={
+          <Route path="/admin/notifications" element={
             <ProtectedRoute>
               <Notifications/>
             </ProtectedRoute>
           }/>
 
-          <Route path="/settings" element={
+          <Route path="/transactions" element={
             <ProtectedRoute>
-              <Settings/>
+              <Transactions/>
             </ProtectedRoute>
           }/>
 
@@ -77,19 +89,6 @@ function App(){
             </ProtectedRoute>
           }/>
 
-           <Route path="/products/edit/:id" element={
-            <ProtectedRoute>
-              <EditProduct/>
-            </ProtectedRoute>
-          }/>
-
-          <Route path="/profile" element={
-            <ProtectedRoute>
-              <Profile/>
-            </ProtectedRoute>
-          }/>
-
-
           <Route path="*" element={<h1>404 Page Not Found </h1>} />
         
         </Routes>
@@ -97,5 +96,6 @@ function App(){
     </AdminAuthProvider>
   )
 }
+
 
 export default App
