@@ -3,17 +3,46 @@ import mongoose from "mongoose"
 
 export const createProject = async (req, res) => {
   try {
-    const project = await Project.create(req.body)
+    // 🔍 DEBUG مهم جداً
+    console.log("CREATE PROJECT BODY:", req.body)
+
+    const {
+      name,
+      description,
+      goalAmount,
+      status,
+      endDate
+    } = req.body
+
+    // ✅ Validation يدوي (قبل mongoose)
+    if (!name || goalAmount === undefined) {
+      return res.status(400).json({
+        message: "name and goalAmount are required",
+        received: req.body
+      })
+    }
+
+    const project = await Project.create({
+      name,
+      description,
+      goalAmount: Number(goalAmount),
+      status,
+      endDate
+    })
+
     res.status(201).json(project)
+
   } catch (err) {
     console.error("CREATE PROJECT ERROR:", err)
-    res.status(500).json({ message: "Server error" })
+    res.status(500).json({
+      message: err.message || "Server error"
+    })
   }
 }
 
 export const getAllProjects = async (req, res) => {
   try {
-    const projects = await Project.find()
+    const projects = await Project.find().sort({ createdAt: -1 })
     res.json(projects)
   } catch (err) {
     res.status(500).json({ message: "Server error" })
@@ -42,7 +71,7 @@ export const updateProject = async (req, res) => {
     const project = await Project.findByIdAndUpdate(
       req.params.id,
       req.body,
-      { new: true }
+      { new: true, runValidators: true }
     )
 
     if (!project) {
@@ -51,7 +80,7 @@ export const updateProject = async (req, res) => {
 
     res.json(project)
   } catch (err) {
-    res.status(500).json({ message: "Server error" })
+    res.status(500).json({ message: err.message })
   }
 }
 

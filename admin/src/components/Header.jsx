@@ -9,10 +9,12 @@ import {
   FiUser,
   FiFileText,
   FiBarChart,
-  FiUsers
+  FiUsers,
+  FiFolder
 } from "react-icons/fi"
 import AdminAuthContext from "../context/AdminAuthContext"
 import { toast } from "react-toastify"
+import { FlipRounded } from "@mui/icons-material"
 
 function Header() {
   const location = useLocation()
@@ -25,8 +27,9 @@ function Header() {
     { name: "Dashboard", path: "/dashboard", icon: <FiBarChart /> },
     { name: "Products", path: "/products", icon: <FiPackage /> },
     { name: "Invoices", path: "/invoices", icon: <FiFileText /> },
-    { name: "Customers", path: "/customers", icon: <FiUser /> },
+    { name: "Projects", path: "/projects", icon: <FiFolder /> },
     { name: "Transactions", path: "/transactions", icon: <FiFileText /> },
+    { name: "Customers", path: "/customers", icon: <FiUser /> },
     { name: "Users", path: "/users", icon: <FiUsers /> },
   ]
 

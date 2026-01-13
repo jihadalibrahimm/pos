@@ -18,6 +18,7 @@ import './index.css'
 import Transactions from "./pages/Transactions"
 import Sales from "./pages/Sales"
 import Users from "./pages/Users"
+import Projects from "./pages/Projects"
 
 function App(){
   return (
@@ -44,6 +45,12 @@ function App(){
           <Route path="/products" element={
             <ProtectedRoute>
               <Products/>
+            </ProtectedRoute>
+          }/>
+
+          <Route path="/projects" element={
+            <ProtectedRoute>
+              <Projects/>
             </ProtectedRoute>
           }/>
 
