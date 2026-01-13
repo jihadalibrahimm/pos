@@ -23,7 +23,11 @@ dotenv.config()
 const app = express()
 
 app.use(cors({
-    origin:["http://localhost:5173","https://poss-iksh.onrender.com/"],
+     origin:[
+        "http://localhost:5173",
+        "https://poss-iksh.onrender.com",  
+        "https://poss.onrender.com"         
+    ],
     credentials:true,
 }))
 
