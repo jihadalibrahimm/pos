@@ -74,18 +74,20 @@ Bu proje, modern frontend teknolojileri ve dashboard mimarisi konusundaki yetkin
 1. **Repoyu klonlayın:**
    ```bash
    git clone [https://github.com/jihadalibrahimm/pos.git](https://github.com/jihadalibrahimm/pos.git)
-Proje dizinine gidin:
 
-Bash
 
-cd pos
-Bağımlılıkları yükleyin:
+2. **Proje dizinine gidin:**
+   ```bash
+      cd pos
 
-Bash
+3. **Bağımlılıkları yükleyin:**
+   ```bash
+      npm install
 
-npm install
-Uygulamayı başlatın:
+4. **Uygulamayı başlatın:**
+   ```bash
+      npm run dev
 
-Bash
 
-npm run dev
+
+   
