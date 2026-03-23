@@ -16,6 +16,7 @@ import ProtectedRoute from "./components/ProtectedRoutes";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Sales from "./pages/Sales";
+import { Navigate } from "react-router-dom";
 
 function App() {
   return (
@@ -31,6 +32,12 @@ function App() {
         />
 
         <Routes>
+          <Route path="/" element={
+            <ProtectedRoute>
+              <Navigate to="/home" replace />
+            </ProtectedRoute>
+          } />
+
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
 

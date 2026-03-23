@@ -19,6 +19,7 @@ import Transactions from "./pages/Transactions"
 import Sales from "./pages/Sales"
 import Users from "./pages/Users"
 import Projects from "./pages/Projects"
+import { Navigate } from "react-router-dom"
 
 function App(){
   return (
@@ -27,6 +28,12 @@ function App(){
         <Header/>
           <ToastContainer position="top-center" autoClose={500} />
         <Routes>
+          <Route path="/" element={
+            <ProtectedRoute>
+              <Navigate to="/dashboard" replace />
+            </ProtectedRoute>
+          } />
+
           <Route path="/login" element={<Login/>} />
           <Route path="/register" element={<Register/>} />
           
