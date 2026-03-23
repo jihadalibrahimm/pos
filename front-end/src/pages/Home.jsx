@@ -62,13 +62,13 @@ function Home() {
   ======================== */
 
   return (
-    <div className="pt-28 px-6 max-w-7xl mx-auto space-y-12">
+    <div className="pt-20 px-4 max-w-7xl mx-auto space-y-4">
 
       {/* ================= HEADER ================= */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex flex-col gap-2"
+        className="flex flex-col gap-1"
       >
         <h1 className="text-3xl font-bold text-neutral-900 dark:text-neutral-100">
           Welcome back, {user?.name}
@@ -79,7 +79,7 @@ function Home() {
       </motion.div>
 
       {/* ================= KPIs ================= */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
 
         <Kpi
           title="Total Revenue"
@@ -115,7 +115,7 @@ function Home() {
       </div>
 
       {/* ================= INSIGHTS ================= */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
 
         <Insight
           title="Highest Invoice"
@@ -160,7 +160,7 @@ function Home() {
       border-neutral-200 dark:border-neutral-700
       rounded-2xl shadow-lg overflow-hidden">
 
-        <div className="p-6 flex justify-between items-center border-b">
+        <div className="p-4 flex justify-between items-center border-b">
           <h3 className="text-lg font-semibold">
             Recent Invoices
           </h3>
@@ -228,15 +228,15 @@ function Kpi({ title, value, icon, gradient, loading }) {
       animate={{ opacity: 1, y: 0 }}
       className="bg-white dark:bg-neutral-800 border
       border-neutral-200 dark:border-neutral-700
-      rounded-2xl p-6 shadow-md"
+      rounded-2xl p-4 shadow-md"
     >
-      <div className={`w-14 h-14 rounded-xl
+      <div className={`w-12 h-12 rounded-xl
       bg-gradient-to-r ${gradient}
-      text-white flex items-center justify-center text-2xl mb-4`}>
+      text-white flex items-center justify-center text-xl mb-3`}>
         {icon}
       </div>
       <p className="text-sm text-neutral-500">{title}</p>
-      <h2 className="text-2xl font-bold">
+      <h2 className="text-xl font-bold">
         {loading ? "..." : value}
       </h2>
     </motion.div>
@@ -247,8 +247,8 @@ function Insight({ title, value, subtitle, icon }) {
   return (
     <div className="bg-white dark:bg-neutral-800 border
     border-neutral-200 dark:border-neutral-700
-    rounded-2xl p-6 shadow-md flex gap-4">
-      <div className="text-2xl text-indigo-500">{icon}</div>
+    rounded-2xl p-4 shadow-md flex gap-3">
+      <div className="text-xl text-indigo-500">{icon}</div>
       <div>
         <p className="text-sm text-neutral-500">{title}</p>
         <h3 className="text-xl font-bold">{value}</h3>

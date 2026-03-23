@@ -101,22 +101,22 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="pt-28 px-8 pb-16 bg-[#f6f4ef] min-h-screen space-y-14">
+    <div className="pt-22 px-5 pb-8 bg-[#f6f4ef] min-h-screen space-y-6">
       <motion.div initial={{ opacity: 0, y: -15 }} animate={{ opacity: 1, y: 0 }}>
         <h1 className="text-4xl font-bold">Admin Dashboard</h1>
-        <p className="text-gray-600 mt-2">
+        <p className="text-gray-600 mt-1">
           Business performance & system overview
         </p>
       </motion.div>
 
-      <section className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <section className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
         <KPI title="Admins" value={stats?.totalAdmins || 0} icon={<FiUsers />} to="/users" />
         <KPI title="Projects" value={projects.length} icon={<FiLayers />} to="/projects" />
         <KPI title="Transactions" value={transactions.length} icon={<FiActivity />} to="/transactions" />
         <KPI title="Total Revenue" value={`${stats?.totalSales || 0} ₺`} icon={<FiDollarSign />} to="/transactions" />
       </section>
 
-      <section className="grid lg:grid-cols-3 gap-8">
+      <section className="grid lg:grid-cols-3 gap-4">
         <ChartBox title="Recent Transactions">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={transactionTimeline}>
@@ -177,8 +177,8 @@ export default function Dashboard() {
         </ChartBox>
       </section>
 
-      <section className="bg-white rounded-3xl shadow border p-6">
-        <div className="flex justify-between items-center mb-4">
+      <section className="bg-white rounded-3xl shadow border p-4">
+        <div className="flex justify-between items-center mb-3">
           <h2 className="font-semibold text-lg flex items-center gap-2">
             <FiBell /> Notifications
           </h2>
@@ -187,11 +187,11 @@ export default function Dashboard() {
           </Link>
         </div>
 
-        <div className="space-y-3">
+        <div className="space-y-2">
           {notifications.map(n => (
             <div
               key={n._id}
-              className="p-4 rounded-xl bg-gray-50 border flex justify-between items-center"
+              className="p-3 rounded-xl bg-gray-50 border flex justify-between items-center"
             >
               <p className="text-sm">{n.message}</p>
               <FiArrowRight className="text-gray-400" />
@@ -215,14 +215,14 @@ function KPI({ title, value, icon, to }) {
     <Link to={to}>
       <motion.div
         whileHover={{ y: -6 }}
-        className="bg-white p-6 rounded-2xl shadow border flex items-center gap-4"
+        className="bg-white p-4 rounded-2xl shadow border flex items-center gap-3"
       >
-        <div className="w-14 h-14 bg-indigo-600 text-white rounded-xl flex items-center justify-center text-2xl">
+        <div className="w-12 h-12 bg-indigo-600 text-white rounded-xl flex items-center justify-center text-xl">
           {icon}
         </div>
         <div>
           <p className="text-sm text-gray-500">{title}</p>
-          <p className="text-2xl font-bold">{value}</p>
+          <p className="text-xl font-bold">{value}</p>
         </div>
       </motion.div>
     </Link>
@@ -234,10 +234,10 @@ function ChartBox({ title, children }) {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-white p-6 rounded-3xl shadow border h-80"
+      className="bg-white p-4 rounded-3xl shadow border h-72"
     >
-      <h3 className="font-semibold mb-4">{title}</h3>
-      <div className="h-64 bg-gray-50 rounded-xl p-2">
+      <h3 className="font-semibold mb-3">{title}</h3>
+      <div className="h-56 bg-gray-50 rounded-xl p-2">
         {children}
       </div>
     </motion.div>
