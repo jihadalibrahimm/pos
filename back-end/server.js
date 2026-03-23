@@ -21,14 +21,31 @@ import adminTransactionsRoutes from './routes/adminTransactionsRoutes.js'
 dotenv.config()
 
 const app = express()
+const PORT = process.env.PORT || 5000
+const MONGO_URL = process.env.MONGO_URL
+const allowedOrigins = [
+    "https://poss-iksh.onrender.com",
+    "https://poss.onrender.com",
+]
+
+if (process.env.CLIENT_URL) {
+    allowedOrigins.push(process.env.CLIENT_URL)
+}
 
 app.use(cors({
-     origin:[
-        "http://localhost:5173",
-        "https://poss-iksh.onrender.com",  
-        "https://poss.onrender.com"         
-    ],
-    credentials:true,
+    origin(origin, callback) {
+        if (!origin) return callback(null, true)
+
+        const isAllowedStaticOrigin = allowedOrigins.includes(origin)
+        const isLocalhostOrigin = /^http:\/\/localhost:\d+$/.test(origin)
+
+        if (isAllowedStaticOrigin || isLocalhostOrigin) {
+            return callback(null, true)
+        }
+
+        return callback(new Error(`CORS blocked for origin: ${origin}`))
+    },
+    credentials: true,
 }))
 
 app.use(express.json())
@@ -60,11 +77,43 @@ app.use((err,req,res,next) => {
     res.status(500).json({message:err.message})
 })
 
-const PORT = process.env.PORT || 5000
+const RETRY_BASE_DELAY_MS = 5000
+const RETRY_MAX_DELAY_MS = 60000
 
-mongoose.connect(process.env.MONGO_URL)
-    .then(() => {
-        console.log("Mongo Connected")
-        app.listen(PORT, ()=> console.log(`Server running on port ${PORT}`))
+if (!MONGO_URL) {
+    throw new Error("Missing MONGO_URL in environment variables")
+}
+
+const startServer = () => {
+    app.listen(PORT, () => {
+        console.log(`Server running on port ${PORT}`)
     })
-    .catch((err) => console.log(err))
+}
+
+const connectMongoWithRetry = async (attempt = 1) => {
+    try {
+        await mongoose.connect(MONGO_URL, {
+            serverSelectionTimeoutMS: 10000,
+            socketTimeoutMS: 45000,
+            maxPoolSize: 10,
+        })
+        console.log("Mongo Connected")
+    } catch (err) {
+        const delay = Math.min(RETRY_BASE_DELAY_MS * attempt, RETRY_MAX_DELAY_MS)
+        console.error(`Mongo connection failed (attempt ${attempt}). Retrying in ${delay / 1000}s`)
+        console.error(err.message)
+        setTimeout(() => connectMongoWithRetry(attempt + 1), delay)
+    }
+}
+
+mongoose.connection.on("disconnected", () => {
+    console.warn("Mongo disconnected. Reconnecting...")
+    connectMongoWithRetry()
+})
+
+mongoose.connection.on("error", (err) => {
+    console.error("Mongo error:", err.message)
+})
+
+connectMongoWithRetry()
+startServer()

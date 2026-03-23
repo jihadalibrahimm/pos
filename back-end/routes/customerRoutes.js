@@ -7,13 +7,13 @@ import {
     deleteCustomer,
 } from '../controllers/customerController.js'
 
-import { protectAdmin, authorizeAdmin } from '../middlewares/adminAuth.js'
+import { protect, authorize } from '../middlewares/auth.js'
 
 const router = express.Router()
 
-router.get('/', protectAdmin, getCustomers)
-router.post('/', protectAdmin, authorizeAdmin("manager", "admin", "super-admin"), createCustomer)
-router.put('/:id', protectAdmin, authorizeAdmin("manager", "admin", "super-admin"), updateCustomer)
-router.delete('/:id', protectAdmin, authorizeAdmin("admin", "super-admin"), deleteCustomer)
+router.get('/', protect, getCustomers)
+router.post('/', protect, authorize("cashier", "manager", "admin"), createCustomer)
+router.put('/:id', protect, authorize("cashier", "manager", "admin"), updateCustomer)
+router.delete('/:id', protect, authorize("manager", "admin"), deleteCustomer)
 
 export default router

@@ -22,14 +22,19 @@ function Invoices() {
   })
 
   const fetchAll = async () => {
-    const [invRes, proRes, custRes] = await Promise.all([
-      API.get('/invoices'),
-      API.get('/products'),
-      API.get('/customers'),
-    ])
-    setInvoices(invRes.data)
-    setProducts(proRes.data)
-    setCustomers(custRes.data)
+    try {
+      const [invRes, proRes, custRes] = await Promise.all([
+        API.get('/invoices'),
+        API.get('/products'),
+        API.get('/customers'),
+      ])
+      setInvoices(invRes.data)
+      setProducts(proRes.data)
+      setCustomers(custRes.data)
+    } catch (error) {
+      const message = error.response?.data?.message || "Failed to load invoices data"
+      toast.error(message)
+    }
   }
 
   useEffect(() => {
