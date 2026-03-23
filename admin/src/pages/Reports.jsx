@@ -1,21 +1,35 @@
-import React, { useState, useEffect } from "react"
+import { useEffect, useMemo, useState } from "react"
 import API from "../api/axios"
-import { FiFileText, FiCalendar, FiBarChart } from "react-icons/fi"
-import { AnimatePresence, motion } from "framer-motion"
+import { FiBarChart, FiCalendar, FiFileText, FiTrendingUp } from "react-icons/fi"
+import { motion } from "framer-motion"
 
 function Reports() {
-  const [reports, setReports] = useState([])
+  const [dailyReport, setDailyReport] = useState({ totalSales: 0, count: 0 })
+  const [rangeReport, setRangeReport] = useState({ total: 0, invoices: [] })
+  const [topProducts, setTopProducts] = useState([])
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
+  const [error, setError] = useState("")
 
   useEffect(() => {
     const fetchReports = async () => {
       try {
-        const res = await API.get("/admin/reports") // تأكد من endpoint
-        setReports(res.data)
+        const start = new Date()
+        start.setDate(start.getDate() - 30)
+
+        const [dailyRes, rangeRes, topRes] = await Promise.all([
+          API.get("/admin/reports/daily"),
+          API.post("/admin/reports/range", {
+            start: start.toISOString(),
+            end: new Date().toISOString(),
+          }),
+          API.get("/admin/reports/top-products"),
+        ])
+
+        setDailyReport(dailyRes.data || { totalSales: 0, count: 0 })
+        setRangeReport(rangeRes.data || { total: 0, invoices: [] })
+        setTopProducts(topRes.data || [])
       } catch (err) {
-        console.log(err)
-        setError(err.response?.data?.message || "Failed to fetch reports")
+        setError(err.response?.data?.message || "Failed to load reports")
       } finally {
         setLoading(false)
       }
@@ -24,66 +38,60 @@ function Reports() {
     fetchReports()
   }, [])
 
-  if (loading)
-    return (
-      <div className="p-8 text-xl font-semibold animate-pulse">
-        Loading Reports...
-      </div>
-    )
+  const averageTicket = useMemo(() => {
+    if (!rangeReport.invoices?.length) return 0
+    return Number(rangeReport.total || 0) / rangeReport.invoices.length
+  }, [rangeReport])
 
-  if (error)
-    return (
-      <div className="p-8 text-xl font-semibold text-red-600">
-        Error: {error}
-      </div>
-    )
+  if (loading) {
+    return <div className="p-8 text-xl font-semibold animate-pulse">Loading Reports...</div>
+  }
+
+  if (error) {
+    return <div className="p-8 text-xl font-semibold text-red-600">Error: {error}</div>
+  }
 
   return (
-    <div className="p-6 bg-gradient-to-b from-[#faf6ef] to-[#e8ddc9] min-h-screen mx-auto pt-32">
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="flex items-center gap-3 mb-8"
-      >
-        <FiBarChart className="text-3xl text-blue-600" />
-        <h1 className="text-3xl font-bold text-gray-800">Reports</h1>
+    <div className="p-5 bg-gradient-to-b from-[#faf6ef] to-[#e8ddc9] min-h-screen mx-auto pt-24 space-y-4">
+      <motion.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }} className="flex items-center gap-3">
+        <FiBarChart className="text-2xl text-blue-600" />
+        <h1 className="text-2xl font-bold text-gray-800">Reports</h1>
       </motion.div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        <AnimatePresence>
-          {reports.map((r, index) => (
-            <motion.div
-              key={r._id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ delay: index * 0.05 }}
-              className="p-6 bg-white rounded-xl shadow-md border hover:shadow-xl transition cursor-pointer"
-            >
-              <div className="flex items-center gap-3 mb-3">
-                <FiFileText className="text-blue-600 text-2xl" />
-                <h2 className="text-xl font-semibold text-gray-900">
-                  Report #{r._id.slice(-6)}
-                </h2>
+      <section className="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <ReportCard title="Today Sales" icon={<FiTrendingUp />} value={`$${Number(dailyReport.totalSales || 0).toFixed(2)}`} subtitle={`${dailyReport.count || 0} invoices`} />
+        <ReportCard title="Last 30 Days" icon={<FiCalendar />} value={`$${Number(rangeReport.total || 0).toFixed(2)}`} subtitle={`${rangeReport.invoices?.length || 0} invoices`} />
+        <ReportCard title="Average Ticket" icon={<FiFileText />} value={`$${averageTicket.toFixed(2)}`} subtitle="Last 30 days" />
+      </section>
+
+      <section className="bg-white rounded-2xl border p-4 shadow-sm">
+        <h2 className="text-lg font-semibold mb-3">Top Products</h2>
+        <div className="space-y-2">
+          {topProducts.length ? (
+            topProducts.map((item, index) => (
+              <div key={`${item._id}-${index}`} className="flex justify-between items-center rounded-lg border bg-gray-50 px-3 py-2">
+                <span className="font-medium text-gray-800">{item._id}</span>
+                <span className="text-sm text-gray-600">{item.sold} sold</span>
               </div>
+            ))
+          ) : (
+            <p className="text-gray-500">No product sales data available.</p>
+          )}
+        </div>
+      </section>
+    </div>
+  )
+}
 
-              <p className="text-gray-700 text-lg font-medium">
-                Total Sales:{" "}
-                <span className="text-blue-600">{r.totalSales} USD</span>
-              </p>
-
-              <p className="text-gray-500 flex items-center gap-2 mt-2">
-                <FiCalendar />
-                {new Date(r.createdAt).toLocaleDateString()}
-              </p>
-            </motion.div>
-          ))}
-        </AnimatePresence>
+function ReportCard({ title, value, subtitle, icon }) {
+  return (
+    <div className="bg-white rounded-2xl border p-4 shadow-sm">
+      <div className="flex items-center gap-2 text-indigo-600 mb-2">
+        {icon}
+        <p className="text-sm font-medium">{title}</p>
       </div>
-
-      {reports.length === 0 && (
-        <p className="mt-10 text-gray-500 text-center">No Reports available</p>
-      )}
+      <p className="text-xl font-bold text-gray-900">{value}</p>
+      <p className="text-sm text-gray-500">{subtitle}</p>
     </div>
   )
 }

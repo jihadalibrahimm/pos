@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react"; 
-import API from "../api/axios";
+import API, { apiOrigin } from "../api/axios";
 import { AnimatePresence, motion } from "framer-motion";
 import { FaEdit, FaTrash, FaPlusCircle } from "react-icons/fa";
 import { toast } from "react-toastify";
@@ -34,7 +34,7 @@ function Products() {
   const handleEdit = (p) => {
     setEditing(p);
     setForm({ name:p.name, category:p.category, purchasePrice:p.purchasePrice, sellingPrice:p.sellingPrice, stock:p.stock, minStock:p.minStock, image:null });
-    setImagePreview(p.image ? `http://localhost:5000/uploads/${p.image}` : null);
+    setImagePreview(p.image ? `${apiOrigin}/uploads/${p.image}` : null);
   };
 
   const handleUpdate = async (e) => {
@@ -58,7 +58,7 @@ function Products() {
     } 
     catch(err){ 
       toast.error("Failed");
-      log(err)
+      console.error(err)
     }
   };
 
@@ -82,7 +82,7 @@ function Products() {
           <motion.div key={p._id} initial={{opacity:0,scale:0.95}} animate={{opacity:1,scale:1}} exit={{opacity:0,scale:0.9}} whileHover={{scale:1.03, boxShadow:"0px 10px 20px rgba(0,0,0,0.1)"}} transition={{delay:i*0.05}}
             className="bg-white p-5 rounded-2xl shadow-md flex flex-col justify-between"
           >
-            {p.image && <img src={`http://localhost:5000/uploads/${p.image}`} alt={p.name} className="w-full h-56 md:h-64 lg:h-72 object-contain rounded-xl bg-gray-100"/>}
+            {p.image && <img src={`${apiOrigin}/uploads/${p.image}`} alt={p.name} className="w-full h-56 md:h-64 lg:h-72 object-contain rounded-xl bg-gray-100"/>}
             <div className="mt-3">
               <p className="font-bold text-lg">{p.name}</p>
               <p className="text-gray-600">{p.category}</p>

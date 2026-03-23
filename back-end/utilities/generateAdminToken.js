@@ -1,4 +1,5 @@
 import jwt from "jsonwebtoken"
+import { getCookieOptions } from "./cookieOptions.js"
 
 export const sendAdminToken = (admin, res) => {
   const token = jwt.sign(
@@ -7,13 +8,7 @@ export const sendAdminToken = (admin, res) => {
     { expiresIn: "7d" }
   )
 
-  res.cookie("admin_token", token, {
-    httpOnly: true,
-    secure: false,        // مهم محلياً
-    sameSite: "lax",
-    path: "/",              // 🔥🔥🔥 هذا السطر مهم جدًا
-    maxAge: 7 * 24 * 60 * 60 * 1000,
-  })
+  res.cookie("admin_token", token, getCookieOptions())
 
   res.status(200).json({
     success: true,

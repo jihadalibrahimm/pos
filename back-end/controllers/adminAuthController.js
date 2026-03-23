@@ -1,6 +1,7 @@
 import Admin from "../models/Admin.js"
 import bcrypt from "bcryptjs"
 import { sendAdminToken } from "../utilities/generateAdminToken.js"
+import { getCookieOptions } from "../utilities/cookieOptions.js"
 
 export const adminRegister = async (req, res) => {
   try {
@@ -57,11 +58,7 @@ export const adminLogin = async (req, res) => {
 }
 
 export const adminLogout = (req, res) => {
-  res.clearCookie("admin_token", {
-    httpOnly: true,
-    sameSite: "lax",
-    path: "/",
-  })
+  res.clearCookie("admin_token", getCookieOptions())
 
   res.json({ message: "Logged out" })
 }

@@ -18,7 +18,7 @@ function Customer() {
 
   const fetchCustomers = async () => {
     try {
-      const res = await axios.get("/customers");
+      const res = await axios.get("/admin/customers");
       const sorted = res.data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
       setCustomers(sorted);
       setFiltered(sorted);
@@ -77,10 +77,10 @@ function Customer() {
     try {
       setSaving(true);
       if (isEdit) {
-        await axios.put(`/customers/${current._id}`, current);
+        await axios.put(`/admin/customers/${current._id}`, current);
         toast.success("Customer updated successfully");
       } else {
-        await axios.post("/customers", current);
+        await axios.post("/admin/customers", current);
         toast.success("Customer added successfully");
       }
       fetchCustomers();
@@ -96,7 +96,7 @@ function Customer() {
     if (!id) return;
     if (!confirm("Are you sure you want to delete this customer?")) return;
 
-    await axios.delete(`/customers/${id}`);
+    await axios.delete(`/admin/customers/${id}`);
     toast.success("Customer deleted successfully");
     fetchCustomers();
   };

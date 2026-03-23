@@ -18,11 +18,14 @@ import invoiceRoutes from './routes/invoiceRoutes.js'
 import customerRoutes from './routes/customerRoutes.js'
 import adminUsersRoutes from './routes/adminUsersRoutes.js'
 import adminTransactionsRoutes from './routes/adminTransactionsRoutes.js'
+import adminCustomersRoutes from "./routes/adminCustomersRoutes.js"
+import adminReportsRoutes from "./routes/adminReportsRoutes.js"
 dotenv.config()
 
 const app = express()
 const PORT = process.env.PORT || 5000
 const MONGO_URL = process.env.MONGO_URL
+const isProduction = process.env.NODE_ENV === "production"
 const allowedOrigins = [
     "https://poss-iksh.onrender.com",
     "https://poss.onrender.com",
@@ -32,12 +35,16 @@ if (process.env.CLIENT_URL) {
     allowedOrigins.push(process.env.CLIENT_URL)
 }
 
+if (process.env.ADMIN_URL) {
+    allowedOrigins.push(process.env.ADMIN_URL)
+}
+
 app.use(cors({
     origin(origin, callback) {
         if (!origin) return callback(null, true)
 
         const isAllowedStaticOrigin = allowedOrigins.includes(origin)
-        const isLocalhostOrigin = /^http:\/\/localhost:\d+$/.test(origin)
+        const isLocalhostOrigin = !isProduction && /^http:\/\/localhost:\d+$/.test(origin)
 
         if (isAllowedStaticOrigin || isLocalhostOrigin) {
             return callback(null, true)
@@ -58,6 +65,8 @@ app.use("/api/admin/users",adminUsersRoutes)
 app.use("/api/admin/dashboard",adminDashboardRoutes)
 app.use("/api/admin/projects",adminProjectsRoutes)
 app.use("/api/admin/transactions",adminTransactionsRoutes)
+app.use("/api/admin/customers", adminCustomersRoutes)
+app.use("/api/admin/reports", adminReportsRoutes)
 app.use("/api/admin/notifications",adminNotificationsRoutes)
 app.use("/api/admin/settings",adminSettingsRoutes)
 
