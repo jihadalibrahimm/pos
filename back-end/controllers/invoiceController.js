@@ -66,7 +66,8 @@ export const createInvoice = async (req, res) => {
 
     const finalTotal = subTotal - discount + tax;
 
-    if (!req.user?._id) {
+    const cashierId = req.user?._id || req.admin?._id
+    if (!cashierId) {
       return res.status(401).json({ message: "Unauthorized" });
     }
 
@@ -79,7 +80,7 @@ export const createInvoice = async (req, res) => {
       finalTotal,
       paymentMethod,
       customer: customer || null,
-      cashier: req.user._id,
+      cashier: cashierId,
     });
 
     res.status(201).json(invoice);

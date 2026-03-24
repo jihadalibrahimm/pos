@@ -6,15 +6,15 @@ import {
   deleteProduct,
 } from "../controllers/ProductController.js";
 import { upload } from "../middlewares/multer.js";
-import { protect, authorize } from "../middlewares/auth.js";
+import { protectAny, authorizeAny } from "../middlewares/authAny.js";
 import { validateBody } from "../middlewares/validate.js";
 import { productCreateSchema, productUpdateSchema } from "../validators/domainValidators.js";
 
 const router = express.Router();
 
-router.get("/", protect, authorize("cashier", "manager", "admin"), getProducts);
-router.post("/", protect, authorize("manager", "admin"), upload.single("image"), validateBody(productCreateSchema), createProduct);
-router.put("/:id", protect, authorize("manager", "admin"), upload.single("image"), validateBody(productUpdateSchema), updateProduct);
-router.delete("/:id", protect, authorize("manager", "admin"), deleteProduct);
+router.get("/", protectAny, authorizeAny("cashier", "manager", "admin", "super-admin"), getProducts);
+router.post("/", protectAny, authorizeAny("manager", "admin", "super-admin"), upload.single("image"), validateBody(productCreateSchema), createProduct);
+router.put("/:id", protectAny, authorizeAny("manager", "admin", "super-admin"), upload.single("image"), validateBody(productUpdateSchema), updateProduct);
+router.delete("/:id", protectAny, authorizeAny("manager", "admin", "super-admin"), deleteProduct);
 
 export default router;
