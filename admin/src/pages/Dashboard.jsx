@@ -37,22 +37,36 @@ export default function Dashboard() {
   useEffect(() => {
     const load = async () => {
       try {
-        const [
-          statsRes,
-          transactionsRes,
-          projectsRes,
-          notificationsRes,
-        ] = await Promise.all([
+        const [statsRes, transactionsRes, projectsRes, notificationsRes] = await Promise.allSettled([
           API.get("/admin/dashboard", { withCredentials: true }),
           API.get("/admin/transactions", { withCredentials: true }),
           API.get("/admin/projects", { withCredentials: true }),
           API.get("/admin/notifications", { withCredentials: true }),
         ])
 
-        setStats(statsRes.data)
-        setTransactions(transactionsRes.data || [])
-        setProjects(projectsRes.data || [])
-        setNotifications((notificationsRes.data || []).slice(0, 5))
+        if (statsRes.status === "fulfilled") {
+          setStats(statsRes.value.data)
+        } else {
+          setStats(null)
+        }
+
+        if (transactionsRes.status === "fulfilled") {
+          setTransactions(transactionsRes.value.data || [])
+        } else {
+          setTransactions([])
+        }
+
+        if (projectsRes.status === "fulfilled") {
+          setProjects(projectsRes.value.data || [])
+        } else {
+          setProjects([])
+        }
+
+        if (notificationsRes.status === "fulfilled") {
+          setNotifications((notificationsRes.value.data || []).slice(0, 5))
+        } else {
+          setNotifications([])
+        }
       } finally {
         setLoading(false)
       }
