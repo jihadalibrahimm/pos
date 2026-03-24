@@ -1,6 +1,7 @@
 import Invoice from "../models/Invoice.js";
 import Product from "../models/Product.js";
-import User from "../models/User.js";
+import Customer from "../models/Customer.js";
+import mongoose from "mongoose";
 
 export const getInvoices = async (req, res) => {
   try {
@@ -31,6 +32,10 @@ export const createInvoice = async (req, res) => {
     const finalItems = [];
 
     for (const item of items) {
+      if (!mongoose.Types.ObjectId.isValid(item.productId)) {
+        return res.status(400).json({ message: "Invalid product id in items" });
+      }
+
       const product = await Product.findById(item.productId);
       if (!product) {
         return res.status(404).json({ message: "Product not found" });
@@ -49,15 +54,20 @@ export const createInvoice = async (req, res) => {
       });
     }
 
+    if (customer) {
+      if (!mongoose.Types.ObjectId.isValid(customer)) {
+        return res.status(400).json({ message: "Invalid customer id" });
+      }
+      const customerExists = await Customer.findById(customer).select("_id");
+      if (!customerExists) {
+        return res.status(404).json({ message: "Customer not found" });
+      }
+    }
+
     const finalTotal = subTotal - discount + tax;
 
-    // ✅ جلب كاشير حقيقي (مؤقت)
-    const cashierUser = await User.findOne({
-      role: { $in: ["admin", "cashier"] },
-    });
-
-    if (!cashierUser) {
-      return res.status(400).json({ message: "No cashier user found" });
+    if (!req.user?._id) {
+      return res.status(401).json({ message: "Unauthorized" });
     }
 
     const invoice = await Invoice.create({
@@ -69,7 +79,7 @@ export const createInvoice = async (req, res) => {
       finalTotal,
       paymentMethod,
       customer: customer || null,
-      cashier: cashierUser._id,
+      cashier: req.user._id,
     });
 
     res.status(201).json(invoice);
@@ -81,7 +91,15 @@ export const createInvoice = async (req, res) => {
 
 export const deleteInvoice = async (req, res) => {
   try {
-    await Invoice.findByIdAndDelete(req.params.id);
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ message: "Invalid invoice id" });
+    }
+
+    const deleted = await Invoice.findByIdAndDelete(req.params.id);
+    if (!deleted) {
+      return res.status(404).json({ message: "Invoice not found" });
+    }
+
     res.json({ message: "Invoice deleted" });
   } catch (err) {
     res.status(500).json({ message: err.message });

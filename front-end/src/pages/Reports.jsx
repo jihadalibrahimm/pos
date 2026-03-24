@@ -43,7 +43,8 @@ function Reports() {
   useEffect(() => {
     API.get("/reports/daily").then(res => setDaily(res.data))
     API.get("/reports/top-products").then(res => setTopProducts(res.data))
-    API.get("/reports/weekly").then(res => setChartData(res.data))
+    // Weekly endpoint is not implemented on backend yet.
+    setChartData([])
   }, [])
 
   const getRangeReport = e => {

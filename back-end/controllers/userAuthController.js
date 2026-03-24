@@ -4,8 +4,9 @@ import bcrypt from "bcryptjs"
 import { getCookieOptions } from "../utilities/cookieOptions.js"
 
 const createToken = (res, userId) => {
+    const expiresIn = process.env.JWT_EXPIRES_IN || "7d"
     const token = jwt.sign({ id: userId }, process.env.JWT_SECRET, {
-        expiresIn: "7d",
+        expiresIn,
     })
 
     res.cookie("token", token, getCookieOptions())
@@ -34,7 +35,7 @@ export const registerUser = async (req, res) => {
             },
         })
     } catch (err) {
-        res.status(500).json({ message: err.message })
+        res.status(500).json({ message: "Server error" })
     }
 }
 
@@ -63,7 +64,7 @@ export const loginUser = async (req, res) => {
             },
         })
     } catch (err) {
-        res.status(500).json({ message: err.message })
+        res.status(500).json({ message: "Server error" })
     }
 }
 

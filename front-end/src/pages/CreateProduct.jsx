@@ -11,6 +11,7 @@ function CreateProduct() {
     const [sellingPrice , setSellingPrice ] = useState("")
     const [stock , setStock] = useState("")
     const [minStock , setMinStock ] = useState(5)
+    const [imageFile, setImageFile] = useState(null)
 
     const [loading , setLoading ] = useState(false)
     const [error , setError ] = useState("")
@@ -88,6 +89,13 @@ function CreateProduct() {
                     <input type="number" placeholder="Min Stock(optional)" value={minStock} 
                     onChange={(e) => setMinStock(e.target.value)} className="p-3 border border-neutral-300
                     rounded-xl focus:outline-none focus:ring-2  focus:ring-yellow-400" required/>
+
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => setImageFile(e.target.files?.[0] || null)}
+                      className="p-3 border border-neutral-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                    />
 
                     <button type="submit" disabled={loading} className="mt-4 py-3 bg-linear-to-r
                     from-yellow-400 to-orange-500 text-white font-bold rounded-xl hover:shadow-lg

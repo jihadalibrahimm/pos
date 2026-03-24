@@ -11,6 +11,11 @@ export const adminRegister = async (req, res) => {
       return res.status(400).json({ message: "All fields are required" })
     }
 
+    const adminCount = await Admin.countDocuments()
+    if (adminCount > 0) {
+      return res.status(403).json({ message: "Admin self-registration is disabled" })
+    }
+
     const exists = await Admin.findOne({ email })
     if (exists) {
       return res.status(400).json({ message: "Email already exists" })
@@ -22,7 +27,7 @@ export const adminRegister = async (req, res) => {
       name,
       email,
       password: hashedPassword,
-      role,
+      role: role === "super-admin" ? "super-admin" : "admin",
     })
 
     return sendAdminToken(admin, res)

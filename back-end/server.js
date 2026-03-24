@@ -3,6 +3,8 @@ import dotenv from 'dotenv'
 import cors from 'cors'
 import mongoose from 'mongoose'
 import cookieParser from 'cookie-parser'
+import helmet from 'helmet'
+import rateLimit from 'express-rate-limit'
 
 import userAuthRoutes from "./routes/userAuthRoutes.js"
 import adminAuthRoutes from './routes/adminAuthRoutes.js'
@@ -39,14 +41,22 @@ if (process.env.ADMIN_URL) {
     allowedOrigins.push(process.env.ADMIN_URL)
 }
 
+const isTrustedOrigin = (origin) => {
+    if (!origin) return true
+    if (allowedOrigins.includes(origin)) return true
+    if (!isProduction && /^http:\/\/localhost:\d+$/.test(origin)) return true
+    return false
+}
+
+app.set("trust proxy", 1)
+
+app.use(helmet({
+    crossOriginResourcePolicy: { policy: "cross-origin" },
+}))
+
 app.use(cors({
     origin(origin, callback) {
-        if (!origin) return callback(null, true)
-
-        const isAllowedStaticOrigin = allowedOrigins.includes(origin)
-        const isLocalhostOrigin = !isProduction && /^http:\/\/localhost:\d+$/.test(origin)
-
-        if (isAllowedStaticOrigin || isLocalhostOrigin) {
+        if (isTrustedOrigin(origin)) {
             return callback(null, true)
         }
 
@@ -55,8 +65,65 @@ app.use(cors({
     credentials: true,
 }))
 
-app.use(express.json())
+app.use((req, res, next) => {
+    const stateChangingMethods = ["POST", "PUT", "PATCH", "DELETE"]
+    if (!stateChangingMethods.includes(req.method)) return next()
+
+    const origin = req.get("origin")
+    if (!isTrustedOrigin(origin)) {
+        return res.status(403).json({ message: "Invalid request origin" })
+    }
+
+    return next()
+})
+
+const apiLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    limit: 300,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { message: "Too many requests, please try again later." },
+})
+
+const authLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    limit: 30,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { message: "Too many authentication attempts. Please try later." },
+})
+
+app.use("/api", apiLimiter)
+app.use("/api/auth", authLimiter)
+app.use("/api/admin/auth", authLimiter)
+
+app.use(express.json({ limit: "100kb" }))
 app.use(cookieParser())
+
+const sanitizeObject = (value) => {
+    if (!value || typeof value !== "object") return
+
+    for (const key of Object.keys(value)) {
+        if (key.startsWith("$") || key.includes(".")) {
+            delete value[key]
+            continue
+        }
+
+        const nested = value[key]
+        if (Array.isArray(nested)) {
+            nested.forEach((item) => sanitizeObject(item))
+        } else if (nested && typeof nested === "object") {
+            sanitizeObject(nested)
+        }
+    }
+}
+
+app.use((req, res, next) => {
+    sanitizeObject(req.body)
+    sanitizeObject(req.query)
+    sanitizeObject(req.params)
+    next()
+})
 
 app.get('/', (req,res) => res.json({message:"API is running..."}))
 
@@ -82,8 +149,10 @@ app.use("/uploads", express.static("uploads"));
 app.use((req,res) => res.status(404).json({message:"Route Not Found"}))
 
 app.use((err,req,res,next) => {
-    console.log(err)
-    res.status(500).json({message:err.message})
+    console.error(err)
+    res.status(err.status || 500).json({
+        message: isProduction ? "Internal Server Error" : err.message,
+    })
 })
 
 const RETRY_BASE_DELAY_MS = 5000
